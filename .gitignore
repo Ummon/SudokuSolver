@@ -1,0 +1,10 @@
+bin/
+obj/
+*.pub
+*.priv
+*.userprefs
+*.lock
+.fake/
+.paket/
+build/
+packages/
