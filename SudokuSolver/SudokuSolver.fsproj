@@ -89,5 +89,5 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
-  <Import Project="..\packages\GtkSharp\build\net45\GtkSharp.targets" Condition="Exists('..\packages\GtkSharp.3.1.3\build\net45\GtkSharp.targets')" />
+  <Import Project="..\packages\GtkSharp\build\net45\GtkSharp.targets" Condition="Exists('..\packages\GtkSharp\build\net45\GtkSharp.targets')" />
 </Project>
