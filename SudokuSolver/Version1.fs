@@ -5,9 +5,6 @@ open System.Threading
 open System.IO
 open System.Collections.Generic
 
-let printUsage progname =
-    printfn "Usage: %A <filename>" progname
-
 [<Struct>]
 type Pos (i: int, j: int) =
     member this.I = i

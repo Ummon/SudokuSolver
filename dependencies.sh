@@ -7,7 +7,6 @@ if [ ! -d .paket ]; then
     chmod u+x .paket/paket.bootstrapper.exe
     .paket/paket.bootstrapper.exe
     chmod u+x .paket/paket.exe
-    chmod u+x packages/FAKE/tools/FAKE.exe
 fi
 
 if [ ! -f paket.lock ]; then
@@ -17,3 +16,5 @@ else
     echo "Restoring dependencies"
     .paket/paket.exe restore
 fi
+
+chmod u+x packages/FAKE/tools/FAKE.exe
