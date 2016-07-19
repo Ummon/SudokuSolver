@@ -6,7 +6,8 @@ A graphical sudoku solver written in F#.
 ## Ubuntu
 
 ```
-> git clone git@github.com:Ummon/SudokuSolver.git
+> sudo apt-get install git fsharp
+> git clone https://github.com/Ummon/SudokuSolver.git
 > cd SudokuSolver
 > ./dependencies.sh
 > ./build_run.sh
