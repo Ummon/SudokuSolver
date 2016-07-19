@@ -12,3 +12,4 @@ A graphical sudoku solver written in F#.
 > ./build_run.sh
 ```
 
+![screenshot](/Doc/sudoku_solver_screenshot.png?raw=true)
