@@ -17,7 +17,7 @@ type Pos (i: int, j: int) =
     override this.ToString() =
         sprintf "Pos(i = %i, j = %i)" this.I this.J
 
-let zoneRange c =
+let inline zoneRange c =
     match c with
     | 0 | 1 | 2 -> [ 0 .. 2 ]
     | 3 | 4 | 5 -> [ 3 .. 5 ]
@@ -45,20 +45,19 @@ type Board (values: int [,]) =
         | _ -> None
 
     let isValid (pos: Pos) (n: int) =
-        List.forall (fun j -> if j = pos.J then true else get (Pos(pos.I, j)) <> n) [ 0 .. 8 ] &&
-        List.forall (fun i -> if i = pos.I then true else get (Pos(i, pos.J)) <> n) [ 0 .. 8 ] &&
-        List.forall (fun (i, j) -> if i = pos.I && j = pos.J then true else get (Pos(i, j)) <> n) [
+        List.forall (fun j -> j = pos.J || board.[pos.I, j] <> n) [ 0 .. 8 ] &&
+        List.forall (fun i -> i = pos.I || board.[i, pos.J] <> n) [ 0 .. 8 ] &&
+        List.forall (fun (i, j) -> (i = pos.I && j = pos.J ) || board.[i, j] <> n) [
             for i' in zoneRange pos.I do
                 for j' in zoneRange pos.J -> i', j' ]
 
     let validNumbers pos = seq {
-        let valid = isValid pos
-        for n in 1 .. 9 do
-            if valid n then yield n }
+        for n = 1 to 9 do
+            if isValid pos n then yield n }
 
     let show (output: TextWriter) =
-        for i in 0 .. size - 1 do
-            for j in 0 .. size - 1 do
+        for i = 0 to size - 1 do
+            for j = 0 to size - 1 do
                 if board.[i, j] = 0 then output.Write '.'
                 else output.Write board.[i, j]
                 if (j + 1) % 3 = 0 && j <> size - 1 then
@@ -79,8 +78,8 @@ type Board (values: int [,]) =
                         numbers.[n] <- true
                         nb <- nb + 1
 
-                for i in 0 .. 8 do get (Pos(i, pos.J)) |> add
-                for j in 0 .. 8 do get (Pos(pos.I, j)) |> add
+                for i = 0 to 8 do get (Pos(i, pos.J)) |> add
+                for j = 0 to 8 do get (Pos(pos.I, j)) |> add
                 for i in zoneRange pos.I do
                     for j in zoneRange pos.J do
                         get (Pos(i, j)) |> add
@@ -99,12 +98,12 @@ type Board (values: int [,]) =
                         | n :: tail ->
                             // If there is no other valid position, then the current is the only one.
                             if seq {
-                                    for i in 0 .. 8 do
+                                    for i = 0 to 8 do
                                         let pos' = Pos(i, pos.J)
                                         if i <> pos.I && get pos' = 0
                                         then yield not (isValid pos' n) } |> Seq.forall id ||
                                seq {
-                                    for j in 0 .. 8 do
+                                    for j = 0 to 8 do
                                         let pos' = Pos(pos.I, j)
                                         if j <> pos.J && get pos' = 0
                                         then yield not (isValid pos' n) } |> Seq.forall id ||
