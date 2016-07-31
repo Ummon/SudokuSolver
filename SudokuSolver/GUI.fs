@@ -56,6 +56,8 @@ type DigitBox() as this =
 type Grid() =
     inherit TableLayout()
 
+type CurrentDigitBoxMove = Left | Down | Right | Up | Next
+
 type MainForm() as this =
     inherit Form()
     do
@@ -65,6 +67,14 @@ type MainForm() as this =
         this.Title <- "Sudoku Solver - gburri"
         this.Size <- Size(400, 400)
         let digitBoxes = Array2D.init 9 9 (fun _ _ -> new DigitBox())
+
+        let digitBoxPos (digitBox: DigitBox) : int * int =
+            seq {
+                for i = 0 to 8 do
+                    for j = 0 to 8 do
+                        if digitBoxes.[i, j] = digitBox then yield i, j
+                 }
+            |> Seq.head
 
         let clearComputedDigits () =
             digitBoxes |> Array2D.iter
@@ -97,20 +107,40 @@ type MainForm() as this =
 
         let mutable currentDigitBox = digitBoxes.[0,0]
         digitBoxes.[0,0].Selected <- true
-        this.KeyDown.Add(
-            fun e ->
-                if e.Key = Keys.Backspace || e.Key = Keys.Delete then
-                    currentDigitBox.SetValue(0, true)
-                else
-                    match Int32.TryParse(e.KeyChar.ToString()) with
-                    | (true, digit) when digit >= 0 && digit <= 9 -> currentDigitBox.SetValue(digit, true)
-                    | _ -> ())
 
         let setCurrentDigitBox db =
             if db <> currentDigitBox then
                 currentDigitBox.Selected <- false
                 db.Selected <- true
                 currentDigitBox <- db
+
+        let moveCurrentDigitBox (move: CurrentDigitBoxMove) =
+            let i, j = digitBoxPos currentDigitBox
+            match move with
+            | Left when j > 0 -> setCurrentDigitBox (digitBoxes.[i, j - 1])
+            | Up when i > 0 -> setCurrentDigitBox (digitBoxes.[i - 1, j])
+            | Right when j < 8 -> setCurrentDigitBox (digitBoxes.[i, j + 1])
+            | Down when i < 8 -> setCurrentDigitBox (digitBoxes.[i + 1, j])
+            | _ -> ()
+
+        this.KeyDown.Add(
+            fun e ->
+                if e.Key = Keys.Backspace || e.Key = Keys.Delete then
+                    currentDigitBox.SetValue(0, true)
+                elif e.Key = Keys.A then
+                    moveCurrentDigitBox Left
+                elif e.Key = Keys.W then
+                    moveCurrentDigitBox Up
+                elif e.Key = Keys.D then
+                    moveCurrentDigitBox Right
+                elif e.Key = Keys.S then
+                    moveCurrentDigitBox Down
+                elif e.Key = Keys.Enter then
+                    moveCurrentDigitBox Next
+                else
+                    match Int32.TryParse(e.KeyChar.ToString()) with
+                    | (true, digit) when digit >= 0 && digit <= 9 -> currentDigitBox.SetValue(digit, true)
+                    | _ -> ())
 
         digitBoxes
         |> Array2D.iter

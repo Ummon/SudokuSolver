@@ -13,3 +13,10 @@ A graphical sudoku solver written in F#.
 ```
 
 ![screenshot](/Doc/sudoku_solver_screenshot.png?raw=true)
+
+
+# TODO
+
+* Add a way to reset the board
+* 'Enter' to move to the nex case
+* Wider separations between blocks
