@@ -56,7 +56,7 @@ type DigitBox() as this =
 type Grid() =
     inherit TableLayout()
 
-type CurrentDigitBoxMove = Left | Down | Right | Up | Next
+type CurrentDigitBoxMove = Left | Down | Right | Up | Next | Previous
 
 type MainForm() as this =
     inherit Form()
@@ -105,6 +105,10 @@ type MainForm() as this =
                                 clearComputedDigits ()) }
             |> Async.Start
 
+        let resetBoard () =
+            digitBoxes |> Array2D.iter (fun d -> d.SetValue(0, false))
+            computeSolution ()
+
         let mutable currentDigitBox = digitBoxes.[0,0]
         digitBoxes.[0,0].Selected <- true
 
@@ -117,30 +121,42 @@ type MainForm() as this =
         let moveCurrentDigitBox (move: CurrentDigitBoxMove) =
             let i, j = digitBoxPos currentDigitBox
             match move with
-            | Left when j > 0 -> setCurrentDigitBox (digitBoxes.[i, j - 1])
-            | Up when i > 0 -> setCurrentDigitBox (digitBoxes.[i - 1, j])
-            | Right when j < 8 -> setCurrentDigitBox (digitBoxes.[i, j + 1])
-            | Down when i < 8 -> setCurrentDigitBox (digitBoxes.[i + 1, j])
-            | _ -> ()
+            | Left -> setCurrentDigitBox (digitBoxes.[i, (if j = 0 then 8 else j - 1)])
+            | Up -> setCurrentDigitBox (digitBoxes.[(if i = 0 then 8 else i - 1), j])
+            | Right -> setCurrentDigitBox (digitBoxes.[i, (j + 1) % 9])
+            | Down -> setCurrentDigitBox (digitBoxes.[(i + 1) % 9, j])
+            | Next -> setCurrentDigitBox (digitBoxes.[(if i = 8 && j = 8 then 0 else i + ((j + 1) / 9)), (j + 1) % 9])
+            | Previous -> setCurrentDigitBox (digitBoxes.[(if i = 0 && j = 0 then 8 else i - (if j = 0 then 1 else 0)), if j = 0 then 8 else j - 1])
 
         this.KeyDown.Add(
             fun e ->
+                // printfn "key: %A" e.Key
                 if e.Key = Keys.Backspace || e.Key = Keys.Delete then
                     currentDigitBox.SetValue(0, true)
-                elif e.Key = Keys.A then
+                elif e.Key = Keys.Left || e.Key = Keys.A then
                     moveCurrentDigitBox Left
-                elif e.Key = Keys.W then
+                elif e.Key = Keys.Up || e.Key = Keys.W then
                     moveCurrentDigitBox Up
-                elif e.Key = Keys.D then
+                elif e.Key = Keys.Right || e.Key = Keys.D then
                     moveCurrentDigitBox Right
-                elif e.Key = Keys.S then
+                elif e.Key = Keys.Down || e.Key = Keys.S then
                     moveCurrentDigitBox Down
-                elif e.Key = Keys.Enter then
+                elif e.Key = Keys.Enter || e.Key = Keys.Space || e.Key = Keys.N then
                     moveCurrentDigitBox Next
+                elif e.Key = Keys.P then
+                    moveCurrentDigitBox Previous
+                elif e.Key = Keys.R then
+                    resetBoard ()
                 else
                     match Int32.TryParse(e.KeyChar.ToString()) with
                     | (true, digit) when digit >= 0 && digit <= 9 -> currentDigitBox.SetValue(digit, true)
                     | _ -> ())
+
+        this.MouseDown.Add(
+            fun e ->
+                if (e.Buttons &&& MouseButtons.Alternate) = MouseButtons.Alternate then
+                    use menu = new ContextMenu(new ButtonMenuItem(Command(fun sender e -> printfn "click"), Text = "Click"))
+                    menu.Show(this))
 
         digitBoxes
         |> Array2D.iter
@@ -149,6 +165,8 @@ type MainForm() as this =
                 digitBox.DigitChanged.Add (fun _ -> computeSolution ()))
 
         let gridLayout = new Grid()
+        let separationColor = Colors.Black
+        let separationThickness = 2
 
         for i = 0 to 8 do
             // Horizontal separations.
@@ -156,13 +174,13 @@ type MainForm() as this =
                 let rowSeparation = new TableRow()
                 gridLayout.Rows.Add(rowSeparation)
                 for j = 0 to 10 do
-                    rowSeparation.Cells.Add(new TableCell(new Panel(BackgroundColor = Colors.Black)))
+                    rowSeparation.Cells.Add(new TableCell(new Panel(BackgroundColor = separationColor, Height = separationThickness)))
             let row = new TableRow(ScaleHeight = true)
             gridLayout.Rows.Add(row)
             for j = 0 to 8 do
                 // Vertical separations.
                 if j = 3 || j = 6 then
-                    row.Cells.Add(new TableCell(new Panel(BackgroundColor = Colors.Black)))
+                    row.Cells.Add(new TableCell(new Panel(BackgroundColor = separationColor, Width = separationThickness)))
                 row.Cells.Add(new TableCell(digitBoxes.[i, j], true))
 
         this.Content <- gridLayout
